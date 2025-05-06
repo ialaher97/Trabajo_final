@@ -54,46 +54,30 @@ public class Lectura_Escritura_Ficheros {
 		}
 		return contactos;
 	}
-	
-	public void nuevoContacto() {
-		//String nombre = VARIABLE
-		//int numero = VARIABLE
+
+	public void nuevoContacto(String nombre,int numero) {
 		
-		Iterator it = contactos().iterator();
-		boolean encontrado = false;
-		
-		while(it.hasNext() && !encontrado) {
-			Contacto c = (Contacto) it.next();
-			
-			if(c.getNombre().equals("nombre")) {
-				System.out.println("El contacto ya se encuentra en la agenda");
-				encontrado = true;
-		
-				
-			}
-		}
-		if(!encontrado) {
 			BufferedWriter bw = null;
-			
-			bw = new BufferedWriter(new FileWriter("Contactos.txt", true));
-			bw.write(nombre+" "+numero);
-			System.out.println("Contacto añadido");
+
+			try {
+				bw = new BufferedWriter(new FileWriter("Contactos.txt", true));
+				bw.write("VARIABLE" + " " + "VARIABLE");
+				System.out.println("Contacto añadido");
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} finally {
+				if (bw != null) {
+					try {
+						bw.close();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+			}
+
 		}
 	}
-	
-	public void eliminarContacto() {
-		
-		Iterator it = contactos().iterator();
-		
-		
-		while(it.hasNext()) {
-			Contacto c = (Contacto) it.next();
-			
-			if(c.getNombre().equalsIgnoreCase("nombre"));
-			
-		}
-	}
-	
-	
 
 }
