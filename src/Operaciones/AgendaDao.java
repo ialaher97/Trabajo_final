@@ -8,6 +8,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -17,24 +18,79 @@ import java.util.List;
 import Controlador.Lectura_Escritura_Ficheros;
 
 public class AgendaDao {
-	Lectura_Escritura_Ficheros lef = new Lectura_Escritura_Ficheros(); 
-	
-	private Connection con() {
-			Connection con = null;
+	Lectura_Escritura_Ficheros lef = new Lectura_Escritura_Ficheros();
 
-			String url = "jdbc:mysql://localhost/Instituto";
+	private Connection con() {
+		Connection con = null;
+
+		String url = "jdbc:mysql://localhost/Instituto";
+		try {
+			con = DriverManager.getConnection(url, "root", "Xzdy5eyu_12");
+		} catch (SQLException ex) {
+			System.out.println("Error al conectar al SGBD.");
+		}
+
+		return con;
+	}
+
+	public void aniadirContacto(Contacto contacto) {
+		List<Contacto> lista = lef.contactos();
+
+		Connection con = con();
+		PreparedStatement sentencia;
+		String sql;
+
+		if (lista.isEmpty()) {
+			sql = "Insert into Contactos (id_Contacto,nombre,apellido,numero,bloqueado) Values" + "(?,?,?,?,?)";
 			try {
-				con = DriverManager.getConnection(url, "root", "Xzdy5eyu_12");
-			} catch (SQLException ex) {
-				System.out.println("Error al conectar al SGBD.");
+				sentencia = con.prepareStatement(sql);
+				sentencia.setString(1, contacto.getId());
+				sentencia.setString(2, contacto.getNombre());
+				sentencia.setString(3, contacto.getApellido());
+				sentencia.setString(4, contacto.getNum());
+				sentencia.setString(5, String.valueOf(contacto.isBloqueado()));
+				con.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 
-			return con;
-		}
-	
-			
 
-	public void eliminarContacto(String nombre, String numero) {
+			lef.nuevoContacto(contacto);
+		} else {
+
+			Iterator it = lista.iterator();
+			boolean encontrado = false;
+
+			while (it.hasNext() && !encontrado) {
+				Contacto c = (Contacto) it.next();
+
+				if (c.getId().equals(contacto.getId())) {
+					encontrado = true;
+
+				}
+			}
+			if (!encontrado) {
+				sql = "Insert into Contactos (id_Contacto,nombre,apellido,numero,bloqueado) Values" + "(?,?,?,?,?)";
+				try {
+					sentencia = con.prepareStatement(sql);
+					sentencia.setString(1, contacto.getId());
+					sentencia.setString(2, contacto.getNombre());
+					sentencia.setString(3, contacto.getApellido());
+					sentencia.setString(4, contacto.getNum());
+					sentencia.setString(5, String.valueOf(contacto.isBloqueado()));
+					con.close();
+				} catch (SQLException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				lista.add(contacto);
+				lef.actualizarContactos(lista);
+			}
+		}
+	}
+
+	public void eliminarContacto(String id) {
 		List<Contacto> lista = lef.contactos();
 		if (lista.isEmpty()) {
 			System.out.println("No hay ningún contacto en la agenda");
@@ -46,50 +102,27 @@ public class AgendaDao {
 			while (it.hasNext() && !encontrado) {
 				Contacto c = (Contacto) it.next();
 
-				if (c.getNombre().equalsIgnoreCase("nombre"));
-				encontrado = true;
-				lista.remove(c);
-				System.out.println("Contacto elimado");
+				if (c.getId().equals(id)) {
+					encontrado = true;
+					lista.remove(c);
+					System.out.println("Contacto elimado");
 
+				}
 			}
 			if (!encontrado) {
 				System.out.println("El contacto no se encuentra en la lista");
 			}
-
-			BufferedWriter bw = null;
-			try {
-				bw = new BufferedWriter(new FileWriter("Contactos.txt", true));
-				for (int i = 0; i < lista.size(); i++) {
-					bw.write(lista.get(i).getNombre() + " " + lista.get(i).getNum());
-				}
-
-				System.out.println("Contacto añadido");
-
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} finally {
-				if (bw != null) {
-					try {
-						bw.close();
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-				}
-			}
-
+			lef.actualizarContactos(lista);
 		}
-		
+
 		Connection con = con();
 		Statement sentencia = null;
 		String sql;
-		
-		
+
 		try {
-			sql ="INSERT INTO CONTACTOS (nombre, numero) values"
-					+ "("+nombre+","+numero+");";
+			sql = "DELETE FROM Contactos WHERE id_Contacto ="+id+";";
 			sentencia.executeUpdate(sql);
+			con.close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -97,23 +130,117 @@ public class AgendaDao {
 
 	}
 
-	public void buscarContacto() {
+	public void buscarContacto(String id) {
 		List<Contacto> lista = lef.contactos();
-		System.out.println("Dime le nombre del contacto que deseas buscar");
-		
+
 		Iterator it = lista.iterator();
 		boolean encontrado = false;
 
 		while (it.hasNext() && !encontrado) {
 			Contacto c = (Contacto) it.next();
 
-			if (c.getNombre().equalsIgnoreCase("nombre"));
-			encontrado = true;
-			System.out.println(c);
+			if (c.getId().equals(id)) {
+				;
+				encontrado = true;
+				System.out.println(c);
+				System.out.println("AÑADIR PARA MOSTRAR EL CONTACTO EN EL PROGRAMA");
+			}
+			if (!encontrado) {
+				System.out.println("El contacto no se encuentra en la lista");
+			}
 		}
-		if (!encontrado) {
-			System.out.println("El contacto no se encuentra en la lista");
+
+	}
+
+	public void bloquearContacto(String id) {
+		List<Contacto> lista = lef.contactos();
+
+		Iterator it = lista.iterator();
+		boolean encontrado = false;
+
+		while (it.hasNext() && !encontrado) {
+			Contacto c = (Contacto) it.next();
+
+			if (c.getId().equals(id)) {
+				encontrado = true;
+				c.bloqueado = true;
+
+			}
+
 		}
+		if(!encontrado) {
+			System.out.println("AÑADIR ERROR");
+		}
+		lef.actualizarContactos(lista);
+		
+		Connection con = con();
+		Statement sentencia = null;
+		String sql;
+		
+	
+		
+		try {
+			sql = "UPDATE Contactos"
+					+"SET bloqueado = true"
+					+"WHERE id_Contacto ="+id+";";
+			sentencia.executeUpdate(sql);
+			
+			sql = "Insert into Bloqueados (id_Contacto) values"
+					+"("+id+");";
+			sentencia.executeUpdate(sql);
+			con.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		
+	}
+	
+	public void desbloquearContacto(String id) {
+		List<Contacto> lista = lef.contactos();
+
+		Iterator it = lista.iterator();
+		boolean encontrado = false;
+
+		while (it.hasNext() && !encontrado) {
+			Contacto c = (Contacto) it.next();
+
+			if (c.getId().equals(id)) {
+				encontrado = true;
+				c.bloqueado = true;
+
+			}
+
+		}
+		if(!encontrado) {
+			System.out.println("AÑADIR ERROR");
+		}
+		lef.actualizarContactos(lista);
+		
+		Connection con = con();
+		Statement sentencia = null;
+		String sql;
+		
+	
+		
+		try {
+			sql = "UPDATE Contactos"
+					+"SET bloqueado = false"
+					+"WHERE id_Contacto ="+id+";";
+			sentencia.executeUpdate(sql);
+			
+			sql = "DELETE FROM Bloqueados WHERE id_Contacto ="+id+";";
+			sentencia.executeUpdate(sql);
+			con.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		
 	}
 
 }
