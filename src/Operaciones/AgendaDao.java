@@ -105,7 +105,7 @@ public class AgendaDao {
 				if (c.getId().equals(id)) {
 					encontrado = true;
 					lista.remove(c);
-					System.out.println("Contacto elimado");
+					System.out.println("Contacto eliminado");
 
 				}
 			}
@@ -163,7 +163,7 @@ public class AgendaDao {
 
 			if (c.getId().equals(id)) {
 				encontrado = true;
-				c.bloqueado = true;
+				c.setBloqueado(false);
 
 			}
 
@@ -209,7 +209,7 @@ public class AgendaDao {
 
 			if (c.getId().equals(id)) {
 				encontrado = true;
-				c.bloqueado = true;
+				c.setBloqueado(true);
 
 			}
 
